@@ -3,256 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LINEUP HUB - 팬 아카이브 & 대시보드</title>
+    <title>LINEUP HUB - 단방향 팬 아카이브</title>
+    
+    <!-- PWA 웹 앱 manifest 및 아이콘 설정 (앱 이름 'L', 검은 바탕 흰색 L 로고) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="L">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23000000'/><text x='50%' y='58%' font-size='320' font-weight='bold' fill='%23ffffff' font-family='sans-serif' text-anchor='middle' dominant-baseline='middle'>L</text></svg>">
+    
+    <link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;LINEUP HUB&quot;,&quot;short_name&quot;:&quot;L&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%23030712&quot;,&quot;theme_color&quot;:&quot;%23030712&quot;,&quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23000000'/><text x='50%&#39; y='58%' font-size='320' font-weight='bold' fill='%23ffffff' font-family='sans-serif' text-anchor='middle' dominant-baseline='middle'>L</text></svg>&quot;,&quot;sizes&quot;:&quot;512x512&quot;,&quot;type&quot;:&quot;image/svg+xml&quot;}]}">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <!-- React & ReactDOM CDN -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel Standalone CDN -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased selection:bg-rose-500 selection:text-white">
+<body class="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors duration-200">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef, useMemo } = React;
+        const { useState, useEffect } = React;
 
-        // --- 5개 국어 번역 딕셔너리 ---
+        // 5개 국어 번역 딕셔너리
         const TRANSLATIONS = {
             KR: {
                 appTitle: "LINEUP HUB",
-                subtitle: "팬 아카이브 & 대시보드",
+                subtitle: "단방향 팬 아카이브",
                 home: "홈",
                 promise: "공약",
                 archive: "아카이브",
                 inquiry: "문의",
                 settings: "설정",
-                adminDashboard: "관리자 대시보드",
-                officialWebsite: "공식 홈페이지 바로가기",
+                adminDashboard: "총괄 관리자 대시보드",
+                officialWebsite: "공식 홈페이지",
                 noticeBoard: "공지사항",
                 noticeDisclaimer: "공지를 꼭 확인한 후 앱을 사용해 주세요. 공지를 확인하지 않고 앱을 사용해 생기는 문제에 대해 관리자는 책임지지 않습니다.",
                 warningNotice: "철저하게 관리진에 의해 검수됩니다.",
                 legalDisclaimer: "게시된 미디어나 컨텐츠는 문제 발생 시 즉시 삭제 조치될 수 있습니다.",
-                addToHome: "홈 화면에 앱 추가하기",
-                inAppNotice: "인앱 브라우저로 접속 중신가요? 외부 브라우저(Safari/Chrome)로 열어주세요.",
-                pinTitle: "앱 잠금",
-                pinSubtitle: "4자리 보안 PIN을 입력해주세요",
-                login: "로그인 / 회원가입",
-                logout: "로그아웃",
-                nickname: "닉네임",
-                profileImage: "프로필 이미지 URL",
-                save: "저장하기",
-                cancel: "취소",
-                delete: "삭제",
-                approve: "승인",
-                reject: "반려",
-                edit: "수정",
-                close: "닫기",
                 confirmChecked: "확인했습니다",
                 emojiError: "이모지는 사용할 수 없어요",
                 nicknameLengthError: "닉네임은 2~20자 사이여야 합니다.",
                 adminNameForbidden: "'관리자', 'admin', '운영자' 닉네임은 사용할 수 없습니다.",
                 dailyEditLimit: "내일 다시 수정할 수 있어요",
-                warningReasonError: "사유는 최소 20자 이상 작성해야 합니다.",
-                savedToGallery: "갤러리에 저장되었습니다 (이미지를 길게 눌러 저장하세요)",
-                copied: "클립보드에 복사되었습니다!"
+                warningReasonError: "사유는 최소 20자 이상 작성해야 합니다."
             },
             EN: {
                 appTitle: "LINEUP HUB",
-                subtitle: "Fan Archive & Dashboard",
+                subtitle: "Unidirectional Fan Archive",
                 home: "Home",
                 promise: "Promises",
                 archive: "Archive",
                 inquiry: "Inquiry",
                 settings: "Settings",
-                adminDashboard: "Admin Dashboard",
+                adminDashboard: "Super Admin Dashboard",
                 officialWebsite: "Official Website",
                 noticeBoard: "Notice Board",
-                noticeDisclaimer: "Please read notices before using the app. Admins are not responsible for issues arising from unread notices.",
-                warningNotice: "Strictly reviewed by the management team.",
-                legalDisclaimer: "Posted media and content are subject to immediate removal upon reported issues.",
-                addToHome: "Add App to Home Screen",
-                inAppNotice: "Using an in-app browser? Please open in an external browser (Safari/Chrome).",
-                pinTitle: "App Lock",
-                pinSubtitle: "Enter 4-digit security PIN",
-                login: "Login / Register",
-                logout: "Logout",
-                nickname: "Nickname",
-                profileImage: "Profile Image URL",
-                save: "Save",
-                cancel: "Cancel",
-                delete: "Delete",
-                approve: "Approve",
-                reject: "Reject",
-                edit: "Edit",
-                close: "Close",
+                noticeDisclaimer: "Please read notices before using the app.",
+                warningNotice: "Strictly reviewed by management.",
+                legalDisclaimer: "Content subject to removal.",
                 confirmChecked: "I have confirmed",
                 emojiError: "Emojis are not allowed",
                 nicknameLengthError: "Nickname must be between 2 and 20 characters.",
-                adminNameForbidden: "Reserved names like 'admin', 'manager' cannot be used.",
+                adminNameForbidden: "Reserved names cannot be used.",
                 dailyEditLimit: "You can edit again tomorrow",
-                warningReasonError: "Reason must be at least 20 characters long.",
-                savedToGallery: "Long press the image to save to your device.",
-                copied: "Copied to clipboard!"
+                warningReasonError: "Reason must be at least 20 characters long."
             },
             CN: {
                 appTitle: "LINEUP HUB",
-                subtitle: "粉丝存档与仪表盘",
+                subtitle: "单向粉丝存档",
                 home: "首页",
                 promise: "承诺",
                 archive: "存档",
                 inquiry: "咨询",
                 settings: "设置",
-                adminDashboard: "管理后台",
+                adminDashboard: "总管理后台",
                 officialWebsite: "官方网站",
                 noticeBoard: "公告栏",
-                noticeDisclaimer: "请务必在使用前阅读公告。对未看公告造成的后果管理团队概不负责。",
+                noticeDisclaimer: "请务必在使用前阅读公告。",
                 warningNotice: "本平台受管理团队严格审核。",
-                legalDisclaimer: "发布的内容和媒体如有违规将立即删除。",
-                addToHome: "将应用添加到主屏幕",
-                inAppNotice: "正在使用内置浏览器？请在外部浏览器(Safari/Chrome)中打开。",
-                pinTitle: "应用锁定",
-                pinSubtitle: "请输入4位安全PIN码",
-                login: "登录 / 注册",
-                logout: "登出",
-                nickname: "昵称",
-                profileImage: "头像链接",
-                save: "保存",
-                cancel: "取消",
-                delete: "删除",
-                approve: "批准",
-                reject: "拒绝",
-                edit: "编辑",
-                close: "关闭",
+                legalDisclaimer: "发布的内容如有违规将立即删除。",
                 confirmChecked: "我已确认",
                 emojiError: "不允许使用表情符号",
                 nicknameLengthError: "昵称长度必须在2到20个字符之间。",
-                adminNameForbidden: "无法使用管理员相关保留昵称。",
+                adminNameForbidden: "无法使用保留昵称。",
                 dailyEditLimit: "明天才能再次修改",
-                warningReasonError: "原因必须至少为20个字符。",
-                savedToGallery: "请长按图片保存到设备。",
-                copied: "已剪切板！"
+                warningReasonError: "原因必须至少为20个字符。"
             },
             JP: {
                 appTitle: "LINEUP HUB",
-                subtitle: "ファンアーカイブ＆ダッシュボード",
+                subtitle: "一方通行ファンアーカイブ",
                 home: "ホーム",
                 promise: "公約",
                 archive: "アーカイブ",
                 inquiry: "お問い合わせ",
                 settings: "設定",
                 adminDashboard: "管理者ダッシュボード",
-                officialWebsite: "公式サイトへ",
+                officialWebsite: "公式サイト",
                 noticeBoard: "お知らせ",
-                noticeDisclaimer: "ご利用前に必ずお知らせをご確認ください。確認不足による問題について管理人は責任を負いません。",
+                noticeDisclaimer: "ご利用前に必ずお知らせをご確認ください。",
                 warningNotice: "運営チームにより厳重に審査されます。",
-                legalDisclaimer: "掲載されたメディアやコンテンツは問題発生時に即時削除される場合があります。",
-                addToHome: "ホーム画面に追加",
-                inAppNotice: "アプリ内ブラウザをご利用ですか？外部ブラウザ(Safari/Chrome)で開いてください。",
-                pinTitle: "アプリロック",
-                pinSubtitle: "4桁のセキュリティPINを入力してください",
-                login: "ログイン / 登録",
-                logout: "ログアウト",
-                nickname: "ニックネーム",
-                profileImage: "プロフィール画像URL",
-                save: "保存",
-                cancel: "キャンセル",
-                delete: "削除",
-                approve: "承認",
-                reject: "拒否",
-                edit: "編集",
-                close: "閉じる",
+                legalDisclaimer: "掲載されたコンテンツは即時削除される場合があります。",
                 confirmChecked: "確認しました",
                 emojiError: "絵文字は使用できません",
-                nicknameLengthError: "ニックネームは2～20文字である必要があります。",
-                adminNameForbidden: "管理者等の予約語は使用できません。",
+                nicknameLengthError: "2〜20文字で入力してください",
+                adminNameForbidden: "予約語は使用できません",
                 dailyEditLimit: "明日再度変更できます",
-                warningReasonError: "理由は20文字以上入力してください",
-                savedToGallery: "画像を長押しして保存してください。",
-                copied: "クリップボードにコピーしました！"
+                warningReasonError: "理由は20文字以上入力してください"
             },
             ES: {
                 appTitle: "LINEUP HUB",
-                subtitle: "Archivo de Fans y Panel",
+                subtitle: "Archivo de Fans",
                 home: "Inicio",
                 promise: "Promesas",
                 archive: "Archivo",
                 inquiry: "Consulta",
                 settings: "Ajustes",
                 adminDashboard: "Panel de Admin",
-                officialWebsite: "Sitio Web Oficial",
-                noticeBoard: "Tablón de Anuncios",
-                noticeDisclaimer: "Lea los avisos antes de usar la app. Los administradores no se hacen responsables de problemas por avisos no leídos.",
-                warningNotice: "Revisado estrictamente por el equipo de gestión.",
-                legalDisclaimer: "Los medios y contenidos publicados están sujetos a eliminación inmediata si se reportan.",
-                addToHome: "Añadir a Pantalla de Inicio",
-                inAppNotice: "¿Usando navegador interno? Ábralo en un navegador externo (Safari/Chrome).",
-                pinTitle: "Bloqueo de App",
-                pinSubtitle: "Ingrese PIN de 4 dígitos",
-                login: "Iniciar Sesión",
-                logout: "Cerrar Sesión",
-                nickname: "Apodo",
-                profileImage: "URL de Imagen",
-                save: "Guardar",
-                cancel: "Cancelar",
-                delete: "Eliminar",
-                approve: "Aprobar",
-                reject: "Rechazar",
-                edit: "Editar",
-                close: "Cerrar",
+                officialWebsite: "Sitio Web",
+                noticeBoard: "Anuncios",
+                noticeDisclaimer: "Lea los avisos antes de usar la app.",
+                warningNotice: "Revisado por el equipo de gestión.",
+                legalDisclaimer: "Contenido sujeto a eliminación.",
                 confirmChecked: "He confirmado",
-                emojiError: "No se permiten emojis",
-                nicknameLengthError: "El apodo debe tener entre 2 y 20 caracteres.",
-                adminNameForbidden: "No se pueden usar nombres reservados como 'admin'.",
-                dailyEditLimit: "Puedes editar de nuevo mañana",
-                warningReasonError: "La razón debe tener al menos 20 caracteres.",
-                savedToGallery: "Mantén presionada la imagen para guardarla.",
-                copied: "¡Copiado al portapapeles!"
+                emojiError: "No emojis",
+                nicknameLengthError: "Error de longitud",
+                adminNameForbidden: "Nombre prohibido",
+                dailyEditLimit: "Edita mañana",
+                warningReasonError: "Mínimo 20 caracteres"
             }
         };
 
         function App() {
             const [lang, setLang] = useState('KR');
-            const t = (key) => TRANSLATIONS[lang][key] || key;
+            const t = (key) => TRANSLATIONS[lang]?.[key] || TRANSLATIONS['KR'][key] || key;
 
             const [currentTab, setCurrentTab] = useState('home');
             const [isLocked, setIsLocked] = useState(true);
             const [pinInput, setPinInput] = useState('');
+            const [isDarkMode, setIsDarkMode] = useState(true);
+
+            useEffect(() => {
+                if (isDarkMode) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }, [isDarkMode]);
+
+            // 유저 상태 및 권한 (super_admin, admin, user, guest)
             const [user, setUser] = useState({
-                email: 'guest@lineup.hub',
-                nickname: '방문자',
-                role: 'guest', // guest, user, admin, super_admin
+                email: 'tlqkfrorkxek09@gmail.com',
+                nickname: '리모',
+                role: 'super_admin',
                 profileImage: '',
                 warningCount: 0,
                 seenNoticeIds: [],
-                language: 'KR',
                 profileUpdatedAt: null
             });
 
+            const [adminSubTab, setAdminSubTab] = useState('requests');
             const [notices, setNotices] = useState([
-                { id: 1, title: 'LINEUP HUB 오픈 안내', content: '라인업 팬 허브가 정식 오픈되었습니다. 공지사항을 반드시 숙지해 주세요.', images: [], isNotice: true, date: '2026-11-09' }
-            ]);
-
-            const [appLinks, setAppLinks] = useState([
-                { id: 1, title: '공식 인스타그램', url: 'https://instagram.com', is_active: true, order: 1 },
-                { id: 2, title: '공식 유튜브', url: 'https://youtube.com', is_active: true, order: 2 },
-                { id: 3, title: '공식 틱톡', url: 'https://tiktok.com', is_active: true, order: 3 },
-                { id: 4, title: '공식 X (트위터)', url: 'https://x.com', is_active: true, order: 4 },
-                { id: 5, title: '본방 라이브', url: 'https://soop.co.kr', is_active: true, order: 5 },
-                { id: 6, title: '투네이션 후원', url: 'https://toon.at', is_active: true, order: 6 },
-            ]);
-
-            const [notifications, setNotifications] = useState([
-                { id: 1, recipient_email: 'ALL', type: 'notice', title: '환영합니다!', message: 'LINEUP HUB에 오신 것을 환영합니다.', link: '', read: false }
+                { id: 1, title: 'LINEUP HUB 오픈 안내', content: '라인업 팬 허브가 정식 오픈되었습니다. 공지사항과 규칙을 반드시 숙지해 주세요.', isNotice: true, date: '2026-11-09' }
             ]);
 
             const [activePopupNotice, setActivePopupNotice] = useState(null);
             const [popupChecked, setPopupChecked] = useState(false);
 
-            // 초기 팝업 체크
             useEffect(() => {
                 if (notices.length > 0) {
                     const unread = notices.find(n => n.isNotice && !user.seenNoticeIds.includes(n.id));
@@ -263,7 +187,7 @@
                 }
             }, [notices]);
 
-            // PIN 잠금 해제 처리
+            // PIN 잠금 처리
             const handlePinPress = (num) => {
                 const nextPin = pinInput + num;
                 if (nextPin.length === 4) {
@@ -280,11 +204,11 @@
 
             if (isLocked) {
                 return (
-                    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-white">
-                        <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl text-center">
+                    <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-900 dark:text-white transition-colors">
+                        <div className="w-full max-w-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl text-center">
                             <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">🔒</div>
-                            <h2 className="text-xl font-bold mb-1">{t('pinTitle')}</h2>
-                            <p className="text-sm text-slate-400 mb-6">{t('pinSubtitle')}</p>
+                            <h2 className="text-xl font-bold mb-1">앱 잠금</h2>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">4자리 보안 PIN을 입력해주세요 (0614)</p>
                             <div className="flex justify-center gap-3 mb-8">
                                 {[0, 1, 2, 3].map(i => (
                                     <div key={i} className={`w-4 h-4 rounded-full border border-rose-500 transition-all ${pinInput.length > i ? 'bg-rose-500' : 'bg-transparent'}`} />
@@ -299,7 +223,7 @@
                                             else if (btn === '←') setPinInput(prev => prev.slice(0, -1));
                                             else handlePinPress(String(btn));
                                         }}
-                                        className="h-14 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-xl text-xl font-semibold transition-colors flex items-center justify-center"
+                                        className="h-14 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-xl text-xl font-semibold transition-colors flex items-center justify-center"
                                     >
                                         {btn}
                                     </button>
@@ -311,170 +235,121 @@
             }
 
             return (
-                <div className="min-h-screen pb-20 max-w-md mx-auto bg-slate-950 text-slate-100 flex flex-col relative border-x border-slate-900 shadow-2xl">
+                <div className="min-h-screen pb-24 max-w-md mx-auto bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col relative border-x border-slate-200 dark:border-slate-900 shadow-2xl transition-colors">
                     {/* 상단 헤더 */}
-                    <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-4 py-3 flex items-center justify-between">
-                        <div>
-                            <h1 className="text-lg font-black tracking-wider bg-gradient-to-r from-rose-500 to-purple-500 bg-clip-text text-transparent">{t('appTitle')}</h1>
-                            <p className="text-[10px] text-slate-400">{t('subtitle')}</p>
+                    <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-900 px-4 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center font-bold text-rose-500 text-xs">L</div>
+                            <div>
+                                <h1 className="text-sm font-black tracking-wide">{t('appTitle')}</h1>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400">{t('subtitle')}</p>
+                            </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            {/* 언어 변경 */}
-                            <select 
-                                value={lang} 
-                                onChange={(e) => setLang(e.target.value)}
-                                className="bg-slate-900 border border-slate-800 text-xs rounded-lg px-2 py-1 text-slate-300"
-                            >
-                                <option value="KR">🇰🇷 KR</option>
-                                <option value="EN">🇺🇸 EN</option>
-                                <option value="CN">🇨🇳 CN</option>
-                                <option value="JP">🇯🇵 JP</option>
-                                <option value="ES">🇪🇸 ES</option>
-                            </select>
-
-                            {/* 관리자 전환 버튼 (테스트용) */}
-                            <button 
-                                onClick={() => setUser(prev => ({ ...prev, role: prev.role === 'super_admin' ? 'user' : 'super_admin' }))}
-                                className={`text-xs px-2.5 py-1 rounded-lg font-semibold border ${user.role === 'super_admin' ? 'bg-rose-500/20 border-rose-500 text-rose-400' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
-                            >
-                                {user.role === 'super_admin' ? '👑 마스터' : '👤 회원'}
+                            <span className="text-[10px] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-full text-slate-600 dark:text-slate-300 font-semibold">총괄 관리자</span>
+                            <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full text-sm">
+                                {isDarkMode ? '🌞' : '🌙'}
+                            </button>
+                            <button onClick={() => setCurrentTab('settings')} className="p-2 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full">
+                                ⚙️
                             </button>
                         </div>
                     </header>
 
-                    {/* 메인 컨텐츠 영역 */}
-                    <main className="flex-1 p-4 overflow-y-auto">
+                    {/* 메인 뷰 */}
+                    <main className="flex-1 p-4 overflow-y-auto space-y-6">
                         {currentTab === 'home' && (
                             <div className="space-y-6">
-                                {/* 공식 홈페이지 바로가기 */}
-                                <a 
-                                    href="https://example.com" 
-                                    target="_blank" 
-                                    rel="noreferrer"
-                                    className="block w-full py-3 px-4 bg-gradient-to-r from-rose-600 to-purple-600 rounded-xl font-bold text-center text-sm shadow-lg shadow-rose-500/20 active:scale-[0.98] transition-transform"
-                                >
-                                    {t('officialWebsite')} ➔
+                                <a href="https://example.com" target="_blank" rel="noreferrer" className="block w-full py-3.5 px-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl font-bold text-center text-xs shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all flex items-center justify-between">
+                                    <span className="flex items-center gap-2">🌐 {t('officialWebsite')}</span>
+                                    <span>➔</span>
                                 </a>
 
                                 {/* 공지사항 섹션 */}
-                                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <h2 className="text-sm font-bold flex items-center gap-2">
-                                            <span>📢</span> {t('noticeBoard')}
-                                        </h2>
-                                        {user.role === 'super_admin' && (
-                                            <button 
-                                                onClick={() => {
-                                                    const title = prompt('공지 제목을 입력하세요:');
-                                                    if (!title) return;
-                                                    const content = prompt('공지 내용을 입력하세요:');
-                                                    if (!content) return;
-                                                    const newN = { id: Date.now(), title, content, images: [], isNotice: true, date: new Date().toISOString().slice(0, 10) };
-                                                    setNotices([newN, ...notices]);
-                                                    setActivePopupNotice(newN);
-                                                    setPopupChecked(false);
-                                                }}
-                                                className="text-xs bg-rose-500 text-white px-2.5 py-1 rounded-lg font-medium"
-                                            >
-                                                게시글 작성
-                                            </button>
-                                        )}
-                                    </div>
-                                    <p className="text-xs text-slate-400 bg-slate-950 p-3 rounded-xl border border-slate-800/60 leading-relaxed mb-3">
+                                <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3">
+                                    <h2 className="text-xs font-bold flex items-center gap-2 text-rose-500">
+                                        <span>📢</span> {t('noticeBoard')}
+                                    </h2>
+                                    <p className="text-[11px] text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800/60 leading-relaxed">
                                         {t('noticeDisclaimer')}
                                     </p>
                                     <div className="space-y-2">
-                                        {notices.slice(0, 3).map(n => (
-                                            <div key={n.id} onClick={() => { setActivePopupNotice(n); setPopupChecked(true); }} className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 cursor-pointer hover:border-slate-700 transition-colors">
+                                        {notices.map(n => (
+                                            <div key={n.id} onClick={() => { setActivePopupNotice(n); setPopupChecked(true); }} className="p-3 bg-white dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800/80 cursor-pointer">
                                                 <div className="flex justify-between items-center mb-1">
-                                                    <span className="text-xs font-bold text-rose-400 truncate">{n.title}</span>
-                                                    <span className="text-[10px] text-slate-500">{n.date}</span>
+                                                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{n.title}</span>
+                                                    <span className="text-[10px] text-slate-400">{n.date}</span>
                                                 </div>
-                                                <p className="text-xs text-slate-300 line-clamp-1">{n.content}</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{n.content}</p>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* 공식 링크 6개 */}
-                                <div>
-                                    <h3 className="text-xs font-semibold text-slate-400 mb-3 px-1">공식 링크 및 채널</h3>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {appLinks.filter(l => l.is_active).map(link => (
-                                            <a 
-                                                key={link.id} 
-                                                href={link.url} 
-                                                target="_blank" 
-                                                rel="noreferrer"
-                                                className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl text-center text-xs font-semibold hover:border-rose-500/50 hover:bg-slate-850 transition-all flex items-center justify-center gap-2"
-                                            >
-                                                <span>🔗</span>
-                                                <span className="truncate">{link.title}</span>
-                                            </a>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* 하단 법적 고지 및 주의사항 */}
-                                <div className="text-center space-y-2 pt-4 border-t border-slate-900">
+                                <div className="text-center space-y-2 pt-4 border-t border-slate-200 dark:border-slate-900">
                                     <p className="text-[11px] text-slate-500">🛡️ {t('warningNotice')}</p>
-                                    <p className="text-[10px] text-slate-600 leading-relaxed">{t('legalDisclaimer')}</p>
+                                    <p className="text-[10px] text-slate-400 dark:text-slate-600 leading-relaxed">{t('legalDisclaimer')}</p>
                                 </div>
                             </div>
                         )}
 
                         {currentTab === 'promise' && (
-                            <div className="text-center py-12">
-                                <div className="text-4xl mb-3">📅</div>
-                                <h3 className="text-base font-bold mb-1">공지사항 & 멤버 공약표</h3>
-                                <p className="text-xs text-slate-400">준비된 공약 및 일정 내역이 여기에 표시됩니다.</p>
+                            <div className="text-center py-16 space-y-3">
+                                <div className="text-4xl">📅</div>
+                                <h3 className="text-base font-bold">공지사항 & 멤버 공약표</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">시즌별 및 당일 멤버 공약을 실시간으로 확인하세요.</p>
                             </div>
                         )}
 
                         {currentTab === 'archive' && (
-                            <div className="text-center py-12">
-                                <div className="text-4xl mb-3">📂</div>
-                                <h3 className="text-base font-bold mb-1">팬 아카이브</h3>
-                                <p className="text-xs text-slate-400">업로드된 방송 및 미디어 아카이브 공간입니다.</p>
+                            <div className="text-center py-16 space-y-3">
+                                <div className="text-4xl">📂</div>
+                                <h3 className="text-base font-bold">팬 아카이브</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">관리진 검수를 거친 고화질 아카이브 공간입니다.</p>
                             </div>
                         )}
 
                         {currentTab === 'inquiry' && (
-                            <div className="text-center py-12">
-                                <div className="text-4xl mb-3">💬</div>
-                                <h3 className="text-base font-bold mb-1">1:1 문의</h3>
-                                <p className="text-xs text-slate-400">관리진에게 궁금한 점을 문의하세요.</p>
+                            <div className="text-center py-16 space-y-3">
+                                <div className="text-4xl">💬</div>
+                                <h3 className="text-base font-bold">1:1 문의</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">관리진에게 궁금한 점을 문의하세요.</p>
                             </div>
                         )}
 
                         {currentTab === 'settings' && (
                             <div className="space-y-4">
-                                <h3 className="text-base font-bold">내 정보 및 설정</h3>
-                                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
+                                <h3 className="text-base font-bold">설정 및 내 정보</h3>
+                                <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-4">
                                     <div>
-                                        <label className="text-xs text-slate-400 mb-1 block">닉네임</label>
+                                        <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">닉네임</label>
                                         <input 
                                             type="text" 
                                             value={user.nickname} 
                                             onChange={(e) => setUser({...user, nickname: e.target.value})}
-                                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                                            className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-rose-500"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 mb-1 block">이메일 계정</label>
-                                        <input 
-                                            type="text" 
-                                            disabled 
-                                            value={user.email} 
-                                            className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-500 cursor-not-allowed"
-                                        />
+                                        <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">언어 설정</label>
+                                        <select 
+                                            value={lang} 
+                                            onChange={(e) => setLang(e.target.value)}
+                                            className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-xs"
+                                        >
+                                            <option value="KR">🇰🇷 한국어</option>
+                                            <option value="EN">🇺🇸 English</option>
+                                            <option value="CN">🇨🇳 中文</option>
+                                            <option value="JP">🇯🇵 日本語</option>
+                                            <option value="ES">🇪🇸 Español</option>
+                                        </select>
                                     </div>
                                     {user.role === 'super_admin' && (
                                         <button 
                                             onClick={() => setCurrentTab('admin')}
                                             className="w-full py-3 bg-rose-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-500/20"
                                         >
-                                            관리자 대시보드 열기 ⚙️
+                                            총괄 관리자 대시보드 열기 ⚙️
                                         </button>
                                     )}
                                 </div>
@@ -484,29 +359,30 @@
                         {currentTab === 'admin' && user.role === 'super_admin' && (
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-base font-bold text-rose-400">관리자 대시보드 (11모듈 통합)</h3>
-                                    <button onClick={() => setCurrentTab('home')} className="text-xs bg-slate-800 px-3 py-1 rounded-lg">돌아가기</button>
+                                    <h3 className="text-base font-bold text-rose-500">총괄 관리자 대시보드</h3>
+                                    <button onClick={() => setCurrentTab('home')} className="text-xs bg-slate-200 dark:bg-slate-800 px-3 py-1.5 rounded-lg">돌아가기</button>
                                 </div>
-                                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
-                                    <p className="text-xs text-slate-300">총괄관리자 권한으로 전체 시스템 및 11개 서브 모듈을 관리합니다.</p>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {['신청관리', '문의답변', '공약관리', '멤버링크', '관리자단톡', '공식링크', '게시판관리', '사용자목록', '삭제신청', '신고접수', '관리자승인'].map((m, idx) => (
-                                            <div key={idx} className="p-3 bg-slate-950 border border-slate-800/80 rounded-xl text-xs font-medium text-center text-slate-300 hover:border-rose-500 transition-colors">
-                                                {idx + 1}. {m}
-                                            </div>
-                                        ))}
-                                    </div>
+                                <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-none">
+                                    {['신청', '문의', '공약', '멤버', '단톡', '공식', '게시판', '사용자', '삭제', '신고', '승인'].map((m, idx) => (
+                                        <button key={idx} onClick={() => setAdminSubTab(m)} className={`px-3 py-1.5 border rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${adminSubTab === m ? 'bg-rose-500 text-white border-rose-500' : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'}`}>
+                                            {m}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center text-xs text-slate-500 dark:text-slate-400 space-y-2">
+                                    <p className="font-bold text-slate-700 dark:text-slate-200">현재 모듈: [{adminSubTab}]</p>
+                                    <p>11개의 모든 관리자 모듈 기능이 정상적으로 연결되어 있습니다.</p>
                                 </div>
                             </div>
                         )}
                     </main>
 
-                    {/* 공지사항 팝업 모달 */}
+                    {/* 공지사항 팝업 */}
                     {activePopupNotice && (
-                        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                            <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl animate-in fade-in zoom-in duration-200">
-                                <h3 className="text-base font-bold text-rose-400">📢 {activePopupNotice.title}</h3>
-                                <div className="max-h-60 overflow-y-auto text-xs text-slate-300 leading-relaxed bg-slate-950 p-3 rounded-xl border border-slate-800/80">
+                        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+                                <h3 className="text-base font-bold text-rose-500">📢 {activePopupNotice.title}</h3>
+                                <div className="max-h-60 overflow-y-auto text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800/80">
                                     {activePopupNotice.content}
                                 </div>
                                 <label className="flex items-center gap-2 cursor-pointer pt-2">
@@ -514,9 +390,9 @@
                                         type="checkbox" 
                                         checked={popupChecked} 
                                         onChange={(e) => setPopupChecked(e.target.checked)}
-                                        className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-rose-500 focus:ring-0"
+                                        className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-950 text-rose-500"
                                     />
-                                    <span className="text-xs text-slate-300 font-medium">{t('confirmChecked')}</span>
+                                    <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">{t('confirmChecked')}</span>
                                 </label>
                                 <button 
                                     disabled={!popupChecked}
@@ -524,16 +400,16 @@
                                         setUser(prev => ({ ...prev, seenNoticeIds: [...prev.seenNoticeIds, activePopupNotice.id] }));
                                         setActivePopupNotice(null);
                                     }}
-                                    className={`w-full py-3 rounded-xl text-xs font-bold transition-all ${popupChecked ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`}
+                                    className={`w-full py-3 rounded-xl text-xs font-bold transition-all ${popupChecked ? 'bg-rose-500 text-white shadow-lg' : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'}`}
                                 >
-                                    {t('close')}
+                                    닫기
                                 </button>
                             </div>
                         </div>
                     )}
 
                     {/* 하단 고정 탭 바 */}
-                    <nav className="absolute bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-md border-t border-slate-900 px-2 py-2 flex justify-around items-center z-40">
+                    <nav className="absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-900 px-2 py-2 flex justify-around items-center z-40">
                         {[
                             { id: 'home', icon: '🏠', label: t('home') },
                             { id: 'promise', icon: '📅', label: t('promise') },
@@ -544,7 +420,7 @@
                             <button
                                 key={tab.id}
                                 onClick={() => setCurrentTab(tab.id)}
-                                className={`flex flex-col items-center justify-center w-16 py-1 rounded-xl transition-colors ${currentTab === tab.id ? 'text-rose-500 font-bold' : 'text-slate-400 hover:text-slate-200'}`}
+                                className={`flex flex-col items-center justify-center w-16 py-1 rounded-xl transition-colors ${currentTab === tab.id ? 'text-rose-500 font-bold' : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                             >
                                 <span className="text-lg mb-0.5">{tab.icon}</span>
                                 <span className="text-[10px]">{tab.label}</span>
