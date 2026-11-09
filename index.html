@@ -1,0 +1,1413 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createRoot } from 'react-dom/client';
+
+// ==========================================
+// LINEUP HUB - Comprehensive Fan Archiving & Admin Dashboard Suite
+// Single-file React Application (Babel + Tailwind CSS)
+// ==========================================
+
+// --- Translations dictionary for 5 languages ---
+const TRANSLATIONS = {
+  KR: {
+    appTitle: "LINEUP HUB",
+    subtitle: "팬 아카이브 & 대시보드",
+    home: "홈",
+    promise: "공약",
+    archive: "아카이브",
+    inquiry: "문의",
+    settings: "설정",
+    adminDashboard: "관리자 대시보드",
+    officialWebsite: "공식 홈페이지 바로가기",
+    noticeBoard: "공지사항",
+    noticeDisclaimer: "공지를 꼭 확인한 후 앱을 사용해 주세요. 공지를 확인하지 않고 앱을 사용해 생기는 문제에 대해 관리자는 책임지지 않습니다.",
+    warningNotice: "철저하게 관리진에 의해 검수됩니다.",
+    legalDisclaimer: "게시된 미디어나 컨텐츠는 문제 발생 시 즉시 삭제 조치될 수 있습니다.",
+    addToHome: "홈 화면에 앱 추가하기",
+    inAppNotice: "인앱 브라우저로 접속 중이신가요? 외부 브라우저(Safari/Chrome)로 열어주세요.",
+    pinTitle: "앱 잠금",
+    pinSubtitle: "4자리 보안 PIN을 입력해주세요",
+    login: "로그인 / 회원가입",
+    logout: "로그아웃",
+    nickname: "닉네임",
+    profileImage: "프로필 이미지 URL",
+    save: "저장하기",
+    cancel: "취소",
+    delete: "삭제",
+    approve: "승인",
+    reject: "반려",
+    edit: "수정",
+    close: "닫기",
+    confirmChecked: "확인했습니다",
+    emojiError: "이모지는 사용할 수 없어요",
+    nicknameLengthError: "닉네임은 2~20자 사이여야 합니다.",
+    adminNameForbidden: "'관리자', 'admin', '운영자' 닉네임은 사용할 수 없습니다.",
+    dailyEditLimit: "내일 다시 수정할 수 있어요",
+    warningReasonError: "사유는 최소 20자 이상 작성해야 합니다.",
+    savedToGallery: "갤러리에 저장되었습니다 (이미지를 길게 눌러 저장하세요)",
+    copied: "클립보드에 복사되었습니다!",
+  },
+  EN: {
+    appTitle: "LINEUP HUB",
+    subtitle: "Fan Archive & Dashboard",
+    home: "Home",
+    promise: "Promises",
+    archive: "Archive",
+    inquiry: "Inquiry",
+    settings: "Settings",
+    adminDashboard: "Admin Dashboard",
+    officialWebsite: "Official Website",
+    noticeBoard: "Notice Board",
+    noticeDisclaimer: "Please read notices before using the app. Admins are not responsible for issues arising from unread notices.",
+    warningNotice: "Strictly reviewed by the management team.",
+    legalDisclaimer: "Posted media and content are subject to immediate removal upon reported issues.",
+    addToHome: "Add App to Home Screen",
+    inAppNotice: "Using an in-app browser? Please open in an external browser (Safari/Chrome).",
+    pinTitle: "App Lock",
+    pinSubtitle: "Enter 4-digit security PIN",
+    login: "Login / Register",
+    logout: "Logout",
+    nickname: "Nickname",
+    profileImage: "Profile Image URL",
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    approve: "Approve",
+    reject: "Reject",
+    edit: "Edit",
+    close: "Close",
+    confirmChecked: "I have confirmed",
+    emojiError: "Emojis are not allowed",
+    nicknameLengthError: "Nickname must be between 2 and 20 characters.",
+    adminNameForbidden: "Reserved names like 'admin', 'manager' cannot be used.",
+    dailyEditLimit: "You can edit again tomorrow",
+    warningReasonError: "Reason must be at least 20 characters long.",
+    savedToGallery: "Long press the image to save to your device.",
+    copied: "Copied to clipboard!",
+  },
+  CN: {
+    appTitle: "LINEUP HUB",
+    subtitle: "粉丝存档与仪表盘",
+    home: "首页",
+    promise: "承诺",
+    archive: "存档",
+    inquiry: "咨询",
+    settings: "设置",
+    adminDashboard: "管理后台",
+    officialWebsite: "官方网站",
+    noticeBoard: "公告栏",
+    noticeDisclaimer: "请务必在使用前阅读公告。对未看公告造成的后果管理员概不负责。",
+    warningNotice: "本平台受管理团队严格审核。",
+    legalDisclaimer: "发布的内容和媒体如有违规将立即删除。",
+    addToHome: "将应用添加到主屏幕",
+    inAppNotice: "正在使用内置浏览器？请在外部浏览器(Safari/Chrome)中打开。",
+    pinTitle: "应用锁定",
+    pinSubtitle: "请输入4位安全PIN码",
+    login: "登录 / 注册",
+    logout: "登出",
+    nickname: "昵称",
+    profileImage: "头像链接",
+    save: "保存",
+    cancel: "取消",
+    delete: "删除",
+    approve: "批准",
+    reject: "拒绝",
+    edit: "编辑",
+    close: "关闭",
+    confirmChecked: "我已确认",
+    emojiError: "不允许使用表情符号",
+    nicknameLengthError: "昵称长度必须在2到20个字符之间。",
+    adminNameForbidden: "无法使用管理员相关保留昵称。",
+    dailyEditLimit: "明天才能再次修改",
+    warningReasonError: "原因必须至少为20个字符。",
+    savedToGallery: "请长按图片保存到设备。",
+    copied: "已复制到剪贴板！",
+  },
+  JP: {
+    appTitle: "LINEUP HUB",
+    subtitle: "ファンアーカイブ＆ダッシュボード",
+    home: "ホーム",
+    promise: "公約",
+    archive: "アーカイブ",
+    inquiry: "お問い合わせ",
+    settings: "設定",
+    adminDashboard: "管理者ダッシュボード",
+    officialWebsite: "公式サイトへ",
+    noticeBoard: "お知らせ",
+    noticeDisclaimer: "ご利用前に必ずお知らせをご確認ください。確認不足による問題について管理人は責任を負いません。",
+    warningNotice: "運営チームにより厳重に審査されます。",
+    legalDisclaimer: "掲載されたメディアやコンテンツは問題発生時に即時削除される場合があります。",
+    addToHome: "ホーム画面に追加",
+    inAppNotice: "アプリ内ブラウザをご利用ですか？外部ブラウザ(Safari/Chrome)で開いてください。",
+    pinTitle: "アプリロック",
+    pinSubtitle: "4桁のセキュリティPINを入力してください",
+    login: "ログイン / 登録",
+    logout: "ログアウト",
+    nickname: "ニックネーム",
+    profileImage: "プロフィール画像URL",
+    save: "保存",
+    cancel: "キャンセル",
+    delete: "削除",
+    approve: "承認",
+    reject: "拒否",
+    edit: "編集",
+    close: "閉じる",
+    confirmChecked: "確認しました",
+    emojiError: "絵文字は使用できません",
+    nicknameLengthError: "ニックネームは2〜20文字である必要があります。",
+    adminNameForbidden: "管理者等の予約語は使用できません。",
+    dailyEditLimit: "明日再度変更できます",
+    warningReasonError: "理由は20文字以上入力してください。",
+    savedToGallery: "画像を長押しして保存してください。",
+    copied: "クリップボードにコピーしました！",
+  },
+  ES: {
+    appTitle: "LINEUP HUB",
+    subtitle: "Archivo de Fans y Panel",
+    home: "Inicio",
+    promise: "Promesas",
+    archive: "Archivo",
+    inquiry: "Consulta",
+    settings: "Ajustes",
+    adminDashboard: "Panel de Administrador",
+    officialWebsite: "Sitio Oficial",
+    noticeBoard: "Tablón de Anuncios",
+    noticeDisclaimer: "Lea los avisos antes de usar la aplicación. Los administradores no se hacen responsables de problemas por no leerlos.",
+    warningNotice: "Revisado estrictamente por el equipo de gestión.",
+    legalDisclaimer: "El contenido publicado está sujeto a eliminación inmediata si surgen problemas.",
+    addToHome: "Añadir a Pantalla de Inicio",
+    inAppNotice: "¿Usando navegador integrado? Ábralo en un navegador externo (Safari/Chrome).",
+    pinTitle: "Bloqueo de App",
+    pinSubtitle: "Ingrese PIN de 4 dígitos",
+    login: "Iniciar Sesión",
+    logout: "Cerrar Sesión",
+    nickname: "Apodo",
+    profileImage: "URL de Imagen",
+    save: "Guardar",
+    cancel: "Cancelar",
+    delete: "Eliminar",
+    approve: "Aprobar",
+    reject: "Rechazar",
+    edit: "Editar",
+    close: "Cerrar",
+    confirmChecked: "He confirmado",
+    emojiError: "No se permiten emojis",
+    nicknameLengthError: "El apodo debe tener entre 2 y 20 caracteres.",
+    adminNameForbidden: "No se pueden usar nombres reservados de administrador.",
+    dailyEditLimit: "Podrás editar de nuevo mañana",
+    warningReasonError: "El motivo debe tener al menos 20 caracteres.",
+    savedToGallery: "Mantenga presionada la imagen para guardar.",
+    copied: "¡Copiado al portapapeles!",
+  }
+};
+
+// --- Mock Initial Data ---
+const INITIAL_MEMBERS = [
+  { id: 'm1', name: '서연 (Seoyeon)', group: 'mon-wed-sat', image: 'https://placehold.co/400x400/indigo/white?text=Seoyeon' },
+  { id: 'm2', name: '지우 (Jiwoo)', group: 'mon-wed-sat', image: 'https://placehold.co/400x400/purple/white?text=Jiwoo' },
+  { id: 'm3', name: '하은 (Haeun)', group: 'tue-thu-sun', image: 'https://placehold.co/400x400/pink/white?text=Haeun' },
+  { id: 'm4', name: '유진 (Yujin)', group: 'tue-thu-sun', image: 'https://placehold.co/400x400/blue/white?text=Yujin' },
+];
+
+const INITIAL_APP_LINKS = [
+  { id: 'l1', title: '인스타그램 (Instagram)', url: 'https://instagram.com', order: 1, is_active: true },
+  { id: 'l2', title: '유튜브 (YouTube)', url: 'https://youtube.com', order: 2, is_active: true },
+  { id: 'l3', title: '틱톡 (TikTok)', url: 'https://tiktok.com', order: 3, is_active: true },
+  { id: 'l4', title: '공식 X (Twitter)', url: 'https://twitter.com', order: 4, is_active: true },
+  { id: 'l5', title: '본방라이브 (Live)', url: 'https://twitch.tv', order: 5, is_active: true },
+  { id: 'l6', title: '투네이션 (Toonation)', url: 'https://toon.at', order: 6, is_active: true },
+];
+
+const INITIAL_NOTICES = [
+  {
+    id: 'n1',
+    title: '[공지] LINEUP HUB 정식 오픈 및 이용 수칙 안내',
+    message: 'LINEUP HUB 팬 아카이브 시스템이 정상 오픈되었습니다. 모든 미디어 업로드 및 아카이브 이용 시 규정을 준수해 주세요. 본 공지를 확인한 후 정상적인 이용이 가능합니다.',
+    images: ['https://placehold.co/600x300/4f46e5/white?text=Welcome+Lineup+Hub'],
+    created_date: '2026-06-01 10:00:00',
+    is_notice: true
+  }
+];
+
+const INITIAL_ARCHIVES = [
+  {
+    id: 'a1',
+    memberIds: ['m1', 'm2'],
+    title: '월수토 크루 첫 방송 아카이브컷',
+    content: '방송 중 멋진 순간들을 아카이브합니다. 원본 화질 유지 및 꾹 눌러 저장 지원!',
+    broadcastDate: '2026-06-01',
+    mediaUrls: ['https://placehold.co/600x800/indigo/white?text=Archive+Media+1'],
+    likes: 124,
+    bookmarks: 45,
+    status: 'approved',
+    created_date: '2026-06-01 12:00:00'
+  }
+];
+
+const INITIAL_PROMISES = [
+  {
+    id: 'p1',
+    memberId: 'm1',
+    type: 'day', // 'day' or 'season'
+    seasonNo: '',
+    title: '100일 기념 스페셜 커버곡 공개',
+    content: '달성 시 팬분들이 요청한 곡으로 스페셜 커버 커뮤니티 방송 진행!',
+    images: ['https://placehold.co/600x400/purple/white?text=Promise+1'],
+    created_date: '2026-06-01'
+  }
+];
+
+export default function LineupHubApp() {
+  // --- States ---
+  // Auth & User
+  const [currentUser, setCurrentUser] = useState({
+    email: 'user@lineuphub.com',
+    nickname: '팬사랑단',
+    role: 'super_admin', // 'super_admin', 'admin', 'user', 'guest'
+    profile_image: '',
+    profile_updated_at: '',
+    warning_count: 0,
+    seen_notice_ids: [],
+    language: 'KR'
+  });
+  const [isLocked, setIsLocked] = useState(true);
+  const [pinInput, setPinInput] = useState('');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+
+  // Navigation & UI
+  const [activeTab, setActiveTab] = useState('home'); // home, promise, archive, inquiry, settings, admin
+  const [activeAdminSubTab, setActiveAdminSubTab] = useState('applications'); // 11 tabs
+  const [lang, setLang] = useState('KR');
+  const [toastMessage, setToastMessage] = useState('');
+
+  // Entities
+  const [notices, setNotices] = useState(INITIAL_NOTICES);
+  const [archives, setArchives] = useState(INITIAL_ARCHIVES);
+  const [promises, setPromises] = useState(INITIAL_PROMISES);
+  const [appLinks, setAppLinks] = useState(INITIAL_APP_LINKS);
+  const [members, setMembers] = useState(INITIAL_MEMBERS);
+  const [notifications, setNotifications] = useState([]);
+  const [warnings, setWarnings] = useState([]);
+  const [inquiries, setInquiries] = useState([
+    { id: 'inq1', userEmail: 'user@lineuphub.com', question: '아카이브 사진 업로드 문의드립니다.', answer: '', status: 'pending' }
+  ]);
+  const [deleteRequests, setDeleteRequests] = useState([
+    { id: 'del1', archiveId: 'a1', reason: '초상권 관련 삭제 요청', status: 'pending' }
+  ]);
+  const [reports, setReports] = useState([
+    { id: 'rep1', archiveId: 'a1', reason: '부적절한 내용 포함 신고', reporter: 'user@lineuphub.com', status: 'pending' }
+  ]);
+  const [adminList, setAdminList] = useState([
+    { email: 'admin@lineuphub.com', role: 'super_admin', name: '총괄관리자' },
+    { email: 'subadmin@lineuphub.com', role: 'admin', name: '일반관리자' }
+  ]);
+  const [memberLinks, setMemberLinks] = useState([
+    { id: 'ml1', memberId: 'm1', category: 'youtube', title: '서연 유튜브', url: 'https://youtube.com', accountNo: '' }
+  ]);
+
+  // Modals & Viewers
+  const [activePopupNotice, setActivePopupNotice] = useState(null);
+  const [popupCheckConfirmed, setPopupCheckConfirmed] = useState(false);
+  const [mediaViewerItem, setMediaViewerItem] = useState(null);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({ nickname: '', profile_image: '' });
+  const [warningModalOpen, setWarningModalOpen] = useState(false);
+  const [warningTargetEmail, setWarningTargetEmail] = useState('');
+  const [warningReasonInput, setWarningReasonInput] = useState('');
+
+  // Archive Filter & Sort
+  const [archiveFilterMember, setArchiveFilterMember] = useState('ALL');
+  const [archiveSearchQuery, setArchiveSearchQuery] = useState('');
+  const [archiveSortMode, setArchiveSortMode] = useState('date'); // date, likes, latest
+  const [archiveDisplayCount, setArchiveDisplayCount] = useState(5);
+
+  // Helper Translation function
+  const t = (key) => TRANSLATIONS[lang]?.[key] || TRANSLATIONS['KR'][key] || key;
+
+  // Toast helper
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  // --- 30s Notification Polling ---
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Simulate real-time background notification fetch
+      setNotifications(prev => [...prev]);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // --- Check Unread Notices Popup on load ---
+  useEffect(() => {
+    if (notices.length > 0) {
+      const unread = notices.find(n => !currentUser.seen_notice_ids.includes(n.id));
+      if (unread) {
+        setActivePopupNotice(unread);
+        setPopupCheckConfirmed(false);
+      }
+    }
+  }, [notices, currentUser]);
+
+  // --- PIN Lock Handler ---
+  const handlePinPress = (digit) => {
+    const nextPin = pinInput + digit;
+    if (nextPin.length === 4) {
+      if (nextPin === '0614' || nextPin.length === 4) { // PIN accepted
+        setIsLocked(false);
+        showToast("앱 잠금이 해제되었습니다.");
+      } else {
+        showToast("잘못된 PIN입니다.");
+        setPinInput('');
+      }
+    } else {
+      setPinInput(nextPin);
+    }
+  };
+
+  // --- Profile & Nickname validation ---
+  const handleSaveProfile = () => {
+    const trimmed = profileForm.nickname.trim();
+    // 1. Emoji check
+    const emojiRegex = /[\p{Extended_Pictographic}\u2600-\u27BF]/u;
+    if (emojiRegex.test(trimmed)) {
+      showToast(t('emojiError'));
+      return;
+    }
+    // 2. Length check
+    if (trimmed.length < 2 || trimmed.length > 20) {
+      showToast(t('nicknameLengthError'));
+      return;
+    }
+    // 3. Forbidden names for non-admin
+    if (currentUser.role === 'user' && ['관리자', 'admin', '운영者', '운영자'].includes(trimmed.toLowerCase())) {
+      showToast(t('adminNameForbidden'));
+      return;
+    }
+    // 4. Daily edit limit check (Asia/Seoul midnight)
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (currentUser.profile_updated_at && currentUser.profile_updated_at.startsWith(todayStr)) {
+      showToast(t('dailyEditLimit'));
+      return;
+    }
+
+    setCurrentUser(prev => ({
+      ...prev,
+      nickname: trimmed,
+      profile_image: profileForm.profile_image,
+      profile_updated_at: new Date().toISOString()
+    }));
+    setProfileModalOpen(false);
+    showToast("프로필이 성공적으로 저장되었습니다.");
+  };
+
+  // --- Admin Anonymization Render ---
+  const renderAuthor = (role, name) => {
+    if (role === 'super_admin' || role === 'admin') {
+      return (
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xs">관리</div>
+          <span className="font-semibold text-gray-900 dark:text-gray-100">관리자</span>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center space-x-2">
+        <img src={currentUser.profile_image || "https://placehold.co/100x100/gray/white?text=User"} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
+        <span className="font-semibold text-gray-800 dark:text-gray-200">{name}</span>
+      </div>
+    );
+  };
+
+  // --- Render App Lock Screen ---
+  if (isLocked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-slate-900 flex flex-col items-center justify-center p-4 text-white">
+        <div className="max-w-md w-full bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20 text-center">
+          <div className="text-4xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold mb-2">{t('pinTitle')}</h1>
+          <p className="text-sm text-gray-300 mb-6">{t('pinSubtitle')} (테스트 PIN: 아무 4자리)</p>
+          <div className="flex justify-center space-x-3 mb-8">
+            {[0, 1, 2, 3].map(i => (
+              <div key={i} className={`w-4 h-4 rounded-full border border-white flex items-center justify-center ${pinInput.length > i ? 'bg-white' : 'bg-transparent'}`} />
+            ))}
+          </div>
+          <div className="grid grid-cols-3 gap-4 max-w-xs mx-auto">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '←'].map(btn => (
+              <button
+                key={btn}
+                onClick={() => {
+                  if (btn === 'C') setPinInput('');
+                  else if (btn === '←') setPinInput(prev => prev.slice(0, -1));
+                  else handlePinPress(btn);
+                }}
+                className="bg-white/20 hover:bg-white/30 active:scale-95 transition rounded-xl py-4 text-xl font-bold text-white shadow"
+              >
+                {btn}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl border border-slate-700 text-sm font-medium animate-bounce">
+          {toastMessage}
+        </div>
+      )}
+
+      {/* --- Header --- */}
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-500/30">
+            LH
+          </div>
+          <div>
+            <h1 className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+              {t('appTitle')}
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t('subtitle')}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          {/* Language Selector */}
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value)}
+            className="text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-medium focus:outline-none"
+          >
+            <option value="KR">🇰🇷 한국어</option>
+            <option value="EN">🇺🇸 English</option>
+            <option value="CN">🇨🇳 中文</option>
+            <option value="JP">🇯🇵 日本語</option>
+            <option value="ES">🇪🇸 Español</option>
+          </select>
+
+          {/* Role badge / Shield */}
+          {(currentUser.role === 'super_admin' || currentUser.role === 'admin') && (
+            <button
+              onClick={() => setActiveTab('admin')}
+              className="p-2 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-indigo-100 transition shadow-sm"
+              title={t('adminDashboard')}
+            >
+              🛡️
+            </button>
+          )}
+
+          {/* Profile Button */}
+          <button
+            onClick={() => {
+              setProfileForm({ nickname: currentUser.nickname, profile_image: currentUser.profile_image });
+              setProfileModalOpen(true);
+            }}
+            className="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition"
+          >
+            <img src={currentUser.profile_image || "https://placehold.co/100x100/gray/white?text=U"} alt="Profile" className="w-6 h-6 rounded-full object-cover" />
+            <span className="text-xs font-bold max-w-[80px] truncate">{currentUser.nickname}</span>
+          </button>
+        </div>
+      </header>
+
+      {/* --- Main Content Area --- */}
+      <main className="flex-1 max-w-4xl w-full mx-auto p-4 pb-24">
+        {activeTab === 'home' && (
+          <div className="space-y-6 animate-fadeIn">
+            
+            {/* Official Website Shortcut */}
+            <a
+              href="https://example.com"
+              target="_blank"
+              rel="noreferrer"
+              className="block w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-4 rounded-2xl shadow-lg hover:shadow-xl transition flex items-center justify-between group"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-2xl">🌐</span>
+                <div>
+                  <h2 className="font-bold text-base">{t('officialWebsite')}</h2>
+                  <p className="text-xs text-indigo-100">공식 채널 및 최신 소식을 빠르게 확인하세요</p>
+                </div>
+              </div>
+              <span className="transform group-hover:translate-x-1 transition">→</span>
+            </a>
+
+            {/* Notice Board */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xl">📢</span>
+                  <h3 className="font-bold text-base">{t('noticeBoard')}</h3>
+                </div>
+                {(currentUser.role === 'super_admin' || currentUser.role === 'admin') && (
+                  <button
+                    onClick={() => {
+                      const title = prompt("공지 제목을 입력하세요:");
+                      const message = prompt("공지 내용을 입력하세요:");
+                      if (title && message) {
+                        const newNotice = { id: 'n_' + Date.now(), title, message, images: [], created_date: new Date().toISOString(), is_notice: true };
+                        setNotices([newNotice, ...notices]);
+                        setActivePopupNotice(newNotice);
+                        showToast("공지가 등록되었습니다.");
+                      }
+                    }}
+                    className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-indigo-700 transition"
+                  >
+                    + 게시글 작성
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-xl border border-amber-200 dark:border-amber-900/50 mb-4 leading-relaxed">
+                {t('noticeDisclaimer')}
+              </p>
+              <div className="space-y-3">
+                {notices.map(notice => (
+                  <div key={notice.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded font-bold">공지</span>
+                      <span className="text-xs text-slate-400">{notice.created_date.split(' ')[0]}</span>
+                    </div>
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 mb-1">{notice.title}</h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">{notice.message}</p>
+                    <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                      {renderAuthor('super_admin', '관리자')}
+                      <button
+                        onClick={() => {
+                          setActivePopupNotice(notice);
+                          setPopupCheckConfirmed(true);
+                        }}
+                        className="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
+                      >
+                        자세히 보기 →
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Official Accounts & 6 Main Site Links */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+              <h3 className="font-bold text-base mb-4">🔗 공식 링크 허브</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {appLinks.filter(l => l.is_active).map(link => (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-4 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-xl border border-slate-200 dark:border-slate-700 transition flex flex-col items-center text-center group"
+                  >
+                    <span className="text-2xl mb-2 group-hover:scale-110 transition">🔗</span>
+                    <span className="font-bold text-xs text-slate-800 dark:text-slate-200">{link.title}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Crew Tabs (Mon-Wed-Sat / Tue-Thu-Sun) */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+              <h3 className="font-bold text-base mb-4">👥 크루 멤버 라인업</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {members.map(member => (
+                  <div key={member.id} className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200 dark:border-slate-700 flex items-center space-x-3">
+                    <img src={member.image} alt={member.name} className="w-12 h-12 rounded-xl object-cover" />
+                    <div>
+                      <h4 className="font-bold text-sm">{member.name}</h4>
+                      <p className="text-[10px] text-slate-500 uppercase">{member.group}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Warnings / Disclaimers Footer Notice */}
+            <div className="text-center space-y-2 py-4">
+              <p className="text-xs text-slate-400 font-medium">{t('warningNotice')}</p>
+              <p className="text-[11px] text-slate-500">{t('legalDisclaimer')}</p>
+            </div>
+
+            {/* Add to Home Screen Banner */}
+            <div className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 rounded-2xl p-4 flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-xs text-indigo-900 dark:text-indigo-200">{t('addToHome')}</h4>
+                <p className="text-[11px] text-indigo-700 dark:text-indigo-400 mt-0.5">{t('inAppNotice')}</p>
+              </div>
+              <span className="text-2xl">📱</span>
+            </div>
+
+          </div>
+        )}
+
+        {activeTab === 'promise' && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+              <h2 className="font-extrabold text-xl mb-1">공지사항 & 멤버 공약표</h2>
+              <p className="text-xs text-slate-500 mb-4">전체, 당일 공약 및 시즌 공약 확인 및 필터링</p>
+
+              <div className="space-y-4">
+                {promises.map(p => (
+                  <div key={p.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded font-bold uppercase">
+                        {p.type === 'day' ? '당일 공약' : `시즌 ${p.seasonNo} 공약`}
+                      </span>
+                      <span className="text-xs text-slate-400">{p.created_date}</span>
+                    </div>
+                    <h3 className="font-bold text-base mb-1">{p.title}</h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">{p.content}</p>
+                    {p.images.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {p.images.map((img, idx) => (
+                          <img
+                            key={idx}
+                            src={img}
+                            alt="Promise media"
+                            onClick={() => setMediaViewerItem({ url: img, type: 'image' })}
+                            className="rounded-lg object-contain w-full h-40 bg-slate-900 cursor-pointer hover:opacity-90 transition"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'archive' && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
+                <h2 className="font-extrabold text-xl">팬 아카이브 보기</h2>
+                <button
+                  onClick={() => {
+                    const title = prompt("아카이브 제목:");
+                    const content = prompt("아카이브 내용:");
+                    if (title && content) {
+                      const newArch = {
+                        id: 'a_' + Date.now(),
+                        memberIds: ['m1'],
+                        title,
+                        content,
+                        broadcastDate: new Date().toISOString().split('T')[0],
+                        mediaUrls: ['https://placehold.co/600x800/indigo/white?text=New+Archive+Image'],
+                        likes: 0,
+                        bookmarks: 0,
+                        status: 'approved',
+                        created_date: new Date().toISOString()
+                      };
+                      setArchives([newArch, ...archives]);
+                      showToast("아카이브 신청이 완료되었습니다.");
+                    }
+                  }}
+                  className="bg-indigo-600 text-white text-xs px-4 py-2 rounded-xl font-bold hover:bg-indigo-700 transition"
+                >
+                  + 아카이브 신청
+                </button>
+              </div>
+
+              {/* Filter & Search Bar */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                <input
+                  type="text"
+                  placeholder="제목, 내용 검색..."
+                  value={archiveSearchQuery}
+                  onChange={(e) => setArchiveSearchQuery(e.target.value)}
+                  className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none"
+                />
+                <select
+                  value={archiveFilterMember}
+                  onChange={(e) => setArchiveFilterMember(e.target.value)}
+                  className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none"
+                >
+                  <option value="ALL">멤버 전체 보기</option>
+                  {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+                <select
+                  value={archiveSortMode}
+                  onChange={(e) => setArchiveSortMode(e.target.value)}
+                  className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none"
+                >
+                  <option value="date">날짜별 (방송일 최신순)</option>
+                  <option value="likes">인기순 (하트 많은순)</option>
+                  <option value="latest">최신순 (업로드순)</option>
+                </select>
+              </div>
+
+              {/* Archive List */}
+              <div className="space-y-6">
+                {archives.slice(0, archiveDisplayCount).map(archive => (
+                  <div key={archive.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-2 py-0.5 rounded font-bold">방송일: {archive.broadcastDate}</span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const reason = prompt("신고 사유를 입력하세요 (최소 20자 이상):");
+                          if (reason) {
+                            if (reason.length < 20) {
+                              showToast(t('warningReasonError'));
+                              return;
+                            }
+                            setReports([...reports, { id: 'rep_' + Date.now(), archiveId: archive.id, reason, reporter: currentUser.email, status: 'pending' }]);
+                            showToast("신고가 접수되었습니다.");
+                          }
+                        }}
+                        className="text-[11px] text-red-500 hover:underline font-medium"
+                      >
+                        신고하기
+                      </button>
+                    </div>
+                    <h3 className="font-bold text-base mb-1">{archive.title}</h3>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mb-4">{archive.content}</p>
+
+                    {/* Media Display - object-fit: contain, long press save instruction */}
+                    <div className="space-y-3">
+                      {archive.mediaUrls.map((url, idx) => (
+                        <div key={idx} className="relative rounded-xl overflow-hidden bg-black flex items-center justify-center max-h-[500px]">
+                          <img
+                            src={url}
+                            alt="Archive item"
+                            onClick={() => setMediaViewerItem({ url, type: 'image' })}
+                            className="max-h-[450px] w-full object-contain cursor-pointer"
+                          />
+                          <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded">
+                            {t('savedToGallery')}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <button
+                          onClick={() => {
+                            setArchives(archives.map(a => a.id === archive.id ? { ...a, likes: a.likes + 1 } : a));
+                          }}
+                          className="flex items-center space-x-1 text-xs text-rose-500 font-bold"
+                        >
+                          <span>❤️</span>
+                          <span>{archive.likes}</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setArchives(archives.map(a => a.id === archive.id ? { ...a, bookmarks: a.bookmarks + 1 } : a));
+                          }}
+                          className="flex items-center space-x-1 text-xs text-indigo-500 font-bold"
+                        >
+                          <span>🔖</span>
+                          <span>{archive.bookmarks}</span>
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const reason = prompt("삭제 요청 사유를 입력하세요:");
+                          if (reason) {
+                            setDeleteRequests([...deleteRequests, { id: 'del_' + Date.now(), archiveId: archive.id, reason, status: 'pending' }]);
+                            showToast("삭제 요청이 접수되었습니다.");
+                          }
+                        }}
+                        className="text-xs text-slate-500 hover:text-red-500 underline"
+                      >
+                        삭제 요청
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {archives.length > archiveDisplayCount && (
+                <button
+                  onClick={() => setArchiveDisplayCount(prev => prev + 5)}
+                  className="w-full mt-6 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 py-3 rounded-xl font-bold text-xs transition"
+                >
+                  더보기 (Load More)
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'inquiry' && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+              <h2 className="font-extrabold text-xl mb-4">1:1 문의 답변</h2>
+              <div className="space-y-4 mb-6">
+                {inquiries.map(inq => (
+                  <div key={inq.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <p className="font-bold text-sm mb-1">Q. {inq.question}</p>
+                    <p className="text-xs text-slate-400 mb-2">작성자: {inq.userEmail}</p>
+                    {inq.answer ? (
+                      <div className="mt-3 p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-lg">
+                        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1">관리자 답변:</p>
+                        <p className="text-xs text-slate-700 dark:text-slate-300">{inq.answer}</p>
+                      </div>
+                    ) : (
+                      <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold">답변 대기중</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => {
+                  const question = prompt("문의 내용을 입력하세요:");
+                  if (question) {
+                    setInquiries([...inquiries, { id: 'inq_' + Date.now(), userEmail: currentUser.email, question, answer: '', status: 'pending' }]);
+                    showToast("문의가 등록되었습니다.");
+                  }
+                }}
+                className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs hover:bg-indigo-700 transition"
+              >
+                + 새 문의 작성하기
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800 space-y-4">
+              <h2 className="font-extrabold text-xl">설정 및 내 정보</h2>
+              
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-sm">{currentUser.nickname}</h4>
+                  <p className="text-xs text-slate-400">{currentUser.email} ({currentUser.role})</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setProfileForm({ nickname: currentUser.nickname, profile_image: currentUser.profile_image });
+                    setProfileModalOpen(true);
+                  }}
+                  className="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold"
+                >
+                  프로필 수정
+                </button>
+              </div>
+
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl space-y-2">
+                <h4 className="font-bold text-sm">언어 설정 (Language)</h4>
+                <select
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium"
+                >
+                  <option value="KR">한국어 (Korean)</option>
+                  <option value="EN">English</option>
+                  <option value="CN">中文</option>
+                  <option value="JP">日本語</option>
+                  <option value="ES">Español</option>
+                </select>
+              </div>
+
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-sm">앱 잠금 PIN 변경</h4>
+                  <p className="text-xs text-slate-400">현재 PIN: 0614</p>
+                </div>
+                <button onClick={() => setIsLocked(true)} className="bg-slate-200 dark:bg-slate-700 text-xs px-3 py-1.5 rounded-lg font-bold">
+                  잠금 테스트
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- 11 Modules Admin Dashboard --- */}
+        {activeTab === 'admin' && (currentUser.role === 'super_admin' || currentUser.role === 'admin') && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between mb-4 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div>
+                  <h2 className="font-extrabold text-xl text-indigo-600">🛡️ 관리자 대시보드 (11모듈)</h2>
+                  <p className="text-xs text-slate-400">{t('warningNotice')}</p>
+                </div>
+                <button onClick={() => setActiveTab('home')} className="text-xs bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg font-bold">
+                  홈으로
+                </button>
+              </div>
+
+              {/* 11 Sub Tabs Bar */}
+              <div className="flex overflow-x-auto space-x-2 pb-2 mb-6 scrollbar-none">
+                {[
+                  { id: 'applications', label: '1. 신청관리' },
+                  { id: 'inquiries', label: '2. 문의답변' },
+                  { id: 'promises', label: '3. 공약관리' },
+                  { id: 'memberLinks', label: '4. 멤버링크' },
+                  { id: 'adminChat', label: '5. 관리자단톡' },
+                  { id: 'officialLinks', label: '6. 공식링크' },
+                  { id: 'board', label: '7. 게시판' },
+                  { id: 'users', label: '8. 사용자목록' },
+                  { id: 'deletes', label: '9. 삭제신청' },
+                  { id: 'reports', label: '10. 신고접수' },
+                  { id: 'adminApproval', label: '11. 관리자승인' },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveAdminSubTab(tab.id)}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                      activeAdminSubTab === tab.id
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Sub-Tab 1: Applications */}
+              {activeAdminSubTab === 'applications' && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm">사용자 신청 게시물 검수</h3>
+                  {archives.filter(a => a.status === 'pending' || true).map(arch => (
+                    <div key={arch.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                      <div>
+                        <h4 className="font-bold text-sm">{arch.title}</h4>
+                        <p className="text-xs text-slate-400">방송일: {arch.broadcastDate}</p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button onClick={() => showToast("승인되었습니다.")} className="bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">승인</button>
+                        <button onClick={() => {
+                          const reason = prompt("반려 사유 입력 (필수):");
+                          if (!reason) {
+                            showToast("반려 사유는 필수입니다.");
+                            return;
+                          }
+                          showToast("반려 처리되었습니다.");
+                        }} className="bg-rose-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">반려</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Sub-Tab 2: Inquiries */}
+              {activeAdminSubTab === 'inquiries' && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm">1:1 문의 답변 관리</h3>
+                  {inquiries.map(inq => (
+                    <div key={inq.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <p className="font-bold text-sm mb-1">Q: {inq.question}</p>
+                      <button
+                        onClick={() => {
+                          const answer = prompt("답변 내용을 입력하세요:");
+                          if (answer) {
+                            setInquiries(inquiries.map(i => i.id === inq.id ? { ...i, answer, status: 'completed' } : i));
+                            showToast("답변이 등록되었습니다.");
+                          }
+                        }}
+                        className="mt-2 bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold"
+                      >
+                        {inq.answer ? '답변 수정' : '답변 등록'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Sub-Tab 3: Promises */}
+              {activeAdminSubTab === 'promises' && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm">공약 관리</h3>
+                  <button
+                    onClick={() => {
+                      const title = prompt("새 공약 제목:");
+                      const content = prompt("공약 내용:");
+                      if (title && content) {
+                        setPromises([...promises, { id: 'p_' + Date.now(), memberId: 'm1', type: 'day', seasonNo: '', title, content, images: [], created_date: new Date().toISOString().split('T')[0] }]);
+                        showToast("공약이 등록되었습니다.");
+                      }
+                    }}
+                    className="bg-indigo-600 text-white text-xs px-3 py-2 rounded-xl font-bold"
+                  >
+                    + 새 공약 등록
+                  </button>
+                  {promises.map(p => (
+                    <div key={p.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                      <div>
+                        <h4 className="font-bold text-sm">{p.title}</h4>
+                        <p className="text-xs text-slate-400">{p.content}</p>
+                      </div>
+                      <button onClick={() => setPromises(promises.filter(x => x.id !== p.id))} className="text-xs text-red-500 font-bold">삭제</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Sub-Tab 4: Member Links */}
+              {activeAdminSubTab === 'memberLinks' && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm">멤버별 링크 및 계좌 매핑</h3>
+                  <button
+                    onClick={() => {
+                      const title = prompt("링크 타이틀 (예: 서연 유튜브):");
+                      const url = prompt("링크 URL 또는 계좌번호:");
+                      if (title && url) {
+                        setMemberLinks([...memberLinks, { id: 'ml_' + Date.now(), memberId: 'm1', category: 'youtube', title, url, accountNo: '' }]);
+                        showToast("멤버 링크가 추가되었습니다.");
+                      }
+                    }}
+                    className="bg-indigo-600 text-white text-xs px-3 py-2 rounded-xl font-bold"
+                  >
+                    + 멤버 링크 추가
+                  </button>
+                  {memberLinks.map(ml => (
+                    <div key={ml.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                      <div>
+                        <h4 className="font-bold text-sm">{ml.title}</h4>
+                        <p className="text-xs text-slate-400">{ml.url}</p>
+                      </div>
+                      <button onClick={() => setMemberLinks(memberLinks.filter(x => x.id !== ml.id))} className="text-xs text-red-500 font-bold">삭제</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Sub-Tab 5: Admin Chat */}
+              {activeAdminSubTab === 'adminChat' && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm">관리자 단톡방 및 비상 안내</h3>
+                  <div className="p-4 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-200">
+                    <p className="text-xs font-bold text-indigo-900 dark:text-indigo-200 mb-1">비상용 오픈채팅방 안내</p>
+                    <p className="text-xs text-indigo-700 dark:text-indigo-300 mb-2">링크: https://open.kakao.com/o/example</p>
+                    <p className="text-xs text-indigo-700 dark:text-indigo-300 font-bold">참여 비밀번호: 0614</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-Tab 6: Official Links */}
+              {activeAdminSubTab === 'officialLinks' && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm">공식 링크 관리</h3>
+                  <button
+                    onClick={() => {
+                      const title = prompt("링크 이름:");
+                      const url = prompt("URL (http:// 또는 https://):");
+                      if (title && url) {
+                        setAppLinks([...appLinks, { id: 'al_' + Date.now(), title, url, order: appLinks.length + 1, is_active: true }]);
+                        showToast("공식 링크가 추가되었습니다.");
+                      }
+                    }}
+                    className="bg-indigo-600 text-white text-xs px-3 py-2 rounded-xl font-bold"
+                  >
+                    + 공식 링크 추가
+                  </button>
+                  {appLinks.map(l => (
+                    <div key={l.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                      <div>
+                        <h4 className="font-bold text-sm">{l.title}</h4>
+                        <p className="text-xs text-slate-400">{l.url}</p>
+                      </div>
+                      <button onClick={() => setAppLinks(appLinks.filter(x => x.id !== l.id))} className="text-xs text-red-500 font-bold">삭제</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Sub-Tab 7: Board */}
+              {activeAdminSubTab === 'board' && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm">공지 및 게시판 관리 (팝업 알림 연동)</h3>
+                  <button
+                    onClick={() => {
+                      const title = prompt("공지 제목:");
+                      const message = prompt("공지 내용:");
+                      if (title && message) {
+                        const newN = { id: 'n_' + Date.now(), title, message, images: [], created_date: new Date().toISOString(), is_notice: true };
+                        setNotices([newN, ...notices]);
+                        setActivePopupNotice(newN);
+                        showToast("공지 및 전체 팝업이 등록되었습니다.");
+                      }
+                    }}
+                    className="bg-indigo-600 text-white text-xs px-3 py-2 rounded-xl font-bold"
+                  >
+                    + 팝업 공지 등록
+                  </button>
+                </div>
+              )}
+
+              {/* Sub-Tab 8: Users List & Warnings */}
+              {activeAdminSubTab === 'users' && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm">가입 사용자 목록 및 주의 부여</h3>
+                  <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                    <div>
+                      <h4 className="font-bold text-sm">{currentUser.nickname} ({currentUser.email})</h4>
+                      <p className="text-xs text-slate-400">받은 주의 횟수: {currentUser.warning_count}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setWarningTargetEmail(currentUser.email);
+                        setWarningReasonInput('');
+                        setWarningModalOpen(true);
+                      }}
+                      className="bg-amber-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold"
+                    >
+                      주의 주기
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-Tab 9: Deletes */}
+              {activeAdminSubTab === 'deletes' && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm">게시글 삭제 요청 관리</h3>
+                  {deleteRequests.map(d => (
+                    <div key={d.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                      <div>
+                        <h4 className="font-bold text-sm">사유: {d.reason}</h4>
+                        <p className="text-xs text-slate-400">상태: {d.status}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setDeleteRequests(deleteRequests.filter(x => x.id !== d.id));
+                          showToast("삭제 완료 및 처리되었습니다.");
+                        }}
+                        className="bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold"
+                      >
+                        삭제 실행
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Sub-Tab 10: Reports */}
+              {activeAdminSubTab === 'reports' && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm">신고 접수 검수</h3>
+                  {reports.map(r => (
+                    <div key={r.id} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <p className="font-bold text-sm mb-1">신고 사유: {r.reason}</p>
+                      <p className="text-xs text-slate-400 mb-3">신고자: {r.reporter}</p>
+                      <div className="flex space-x-2">
+                        <button onClick={() => { setReports(reports.filter(x => x.id !== r.id)); showToast("신고 조치 완료"); }} className="bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">적절 (삭제)</button>
+                        <button onClick={() => { setReports(reports.filter(x => x.id !== r.id)); showToast("신고 기각 완료"); }} className="bg-slate-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">부적절 (기각)</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Sub-Tab 11: Admin Approval & Super Delegation */}
+              {activeAdminSubTab === 'adminApproval' && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-sm">관리자 승인 및 총괄 위임</h3>
+                  <div className="p-4 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl border border-indigo-200 mb-4">
+                    <p className="text-xs font-bold text-indigo-900 dark:text-indigo-200 mb-1">관리자 임명 링크</p>
+                    <p className="text-xs text-indigo-700 dark:text-indigo-300">https://lineup-hub.vercel.app/admin-invite?code=0614</p>
+                  </div>
+                  <h4 className="font-bold text-xs">현재 관리자 명단</h4>
+                  {adminList.map((adm, idx) => (
+                    <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center justify-between">
+                      <div>
+                        <span className="font-bold text-xs">{adm.name} ({adm.email})</span>
+                        <span className="ml-2 text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded font-bold">{adm.role}</span>
+                      </div>
+                      {currentUser.role === 'super_admin' && adm.role !== 'super_admin' && (
+                        <button
+                          onClick={() => {
+                            const pwd = prompt("관리자 비밀번호를 입력하세요 (lineupupup0614!):");
+                            if (pwd === 'lineupupup0614!') {
+                              setAdminList(adminList.map(a => a.email === adm.email ? { ...a, role: 'super_admin' } : a));
+                              showToast("총괄 관리자로 임명되었습니다.");
+                            } else {
+                              showToast("비밀번호가 틀렸습니다.");
+                            }
+                          }}
+                          className="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold"
+                        >
+                          총괄 관리자로 임명
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            </div>
+          </div>
+        )}
+
+      </main>
+
+      {/* --- Bottom Navigation Bar --- */}
+      <nav className="sticky bottom-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 py-2 px-6 flex items-center justify-around">
+        {[
+          { id: 'home', label: t('home'), icon: '🏠' },
+          { id: 'promise', label: t('promise'), icon: '📜' },
+          { id: 'archive', label: t('archive'), icon: '📁' },
+          { id: 'inquiry', label: t('inquiry'), icon: '💬' },
+          { id: 'settings', label: t('settings'), icon: '⚙️' },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex flex-col items-center space-y-1 py-1 px-3 rounded-xl transition ${
+              activeTab === tab.id
+                ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+                : 'text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <span className="text-lg">{tab.icon}</span>
+            <span className="text-[10px]">{tab.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* --- Notice Popup Modal --- */}
+      {activePopupNotice && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 max-w-lg w-full rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded font-bold">공지 팝업</span>
+              <span className="text-xs text-slate-400">{activePopupNotice.created_date}</span>
+            </div>
+            <h3 className="font-extrabold text-lg">{activePopupNotice.title}</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">{activePopupNotice.message}</p>
+            
+            <div className="flex items-center space-x-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <input
+                type="checkbox"
+                id="popupCheck"
+                checked={popupCheckConfirmed}
+                onChange={(e) => setPopupCheckConfirmed(e.target.checked)}
+                className="w-4 h-4 text-indigo-600 rounded"
+              />
+              <label htmlFor="popupCheck" className="text-xs font-medium cursor-pointer">{t('confirmChecked')}</label>
+            </div>
+
+            <button
+              disabled={!popupCheckConfirmed}
+              onClick={() => {
+                setCurrentUser(prev => ({
+                  ...prev,
+                  seen_notice_ids: [...prev.seen_notice_ids, activePopupNotice.id]
+                }));
+                setActivePopupNotice(null);
+              }}
+              className={`w-full py-3 rounded-xl font-bold text-xs transition ${
+                popupCheckConfirmed
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/20'
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+              }`}
+            >
+              {t('close')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- Profile Edit Modal --- */}
+      {profileModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 max-w-md w-full rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <h3 className="font-extrabold text-lg">내 프로필 설정</h3>
+            <div>
+              <label className="text-xs font-bold block mb-1">{t('nickname')} (2~20자, 이모지 불가)</label>
+              <input
+                type="text"
+                value={profileForm.nickname}
+                onChange={(e) => setProfileForm({ ...profileForm, nickname: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold block mb-1">{t('profileImage')}</label>
+              <input
+                type="text"
+                value={profileForm.profile_image}
+                onChange={(e) => setProfileForm({ ...profileForm, profile_image: e.target.value })}
+                placeholder="https://..."
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none"
+              />
+            </div>
+            <div className="flex space-x-2 pt-2">
+              <button onClick={() => setProfileModalOpen(false)} className="flex-1 bg-slate-100 dark:bg-slate-800 py-3 rounded-xl font-bold text-xs">
+                {t('cancel')}
+              </button>
+              <button onClick={handleSaveProfile} className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-indigo-700 shadow-lg shadow-indigo-500/20">
+                {t('save')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Warning Modal --- */}
+      {warningModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 max-w-md w-full rounded-2xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <h3 className="font-extrabold text-lg text-amber-600">⚠️ 주의 / 경고 발송</h3>
+            <p className="text-xs text-slate-500">대상: {warningTargetEmail}</p>
+            <div>
+              <label className="text-xs font-bold block mb-1">사유 입력 (최소 20자 이상 필수)</label>
+              <textarea
+                rows="4"
+                value={warningReasonInput}
+                onChange={(e) => setWarningReasonInput(e.target.value)}
+                placeholder="주의 사유를 20자 이상 상세히 입력해주세요..."
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs focus:outline-none"
+              />
+              <p className={`text-[10px] mt-1 ${warningReasonInput.length < 20 ? 'text-red-500' : 'text-emerald-500'}`}>
+                현재 글자 수: {warningReasonInput.length}자 (최소 20자)
+              </p>
+            </div>
+            <div className="flex space-x-2 pt-2">
+              <button onClick={() => setWarningModalOpen(false)} className="flex-1 bg-slate-100 dark:bg-slate-800 py-3 rounded-xl font-bold text-xs">
+                {t('cancel')}
+              </button>
+              <button
+                disabled={warningReasonInput.length < 20}
+                onClick={() => {
+                  showToast("주의가 성공적으로 발송되었습니다.");
+                  setWarningModalOpen(false);
+                }}
+                className={`flex-1 py-3 rounded-xl font-bold text-xs transition ${
+                  warningReasonInput.length >= 20
+                    ? 'bg-amber-600 text-white hover:bg-amber-700 shadow-lg shadow-amber-500/20'
+                    : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                주의 발송
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- Media Viewer Modal --- */}
+      {mediaViewerItem && (
+        <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-4">
+          <button
+            onClick={() => setMediaViewerItem(null)}
+            className="absolute top-5 right-5 bg-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-white/30"
+          >
+            {t('close')} ✕
+          </button>
+          <img src={mediaViewerItem.url} alt="Fullscreen viewer" className="max-w-full max-h-[85vh] object-contain rounded-xl" />
+          <p className="text-white text-xs mt-4">{t('savedToGallery')}</p>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+// Mount to DOM
+const container = document.getElementById('root');
+if (container) {
+  const root = createRoot(container);
+  root.render(<LineupHubApp />);
+}
